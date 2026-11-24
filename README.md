@@ -1,12 +1,12 @@
-# SellQuest
+# Alyp-Satu
 
-SellQuest is a C2C marketplace for buying and selling second-hand goods in Kazakhstan.
+Alyp-Satu is a C2C marketplace for buying and selling second-hand goods in Kazakhstan.
 
 > **Status:** Sprint 01 — Foundation v0.1.0 (in development)
 
 ## Product Vision
 
-SellQuest is built around four differentiating features (planned for future sprints):
+Alyp-Satu is built around four differentiating features (planned for future sprints):
 
 | Feature       | Description                                                          |
 |---------------|----------------------------------------------------------------------|
