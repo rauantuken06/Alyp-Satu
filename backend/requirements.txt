@@ -1,0 +1,14 @@
+# Web framework (5.2 LTS line only — do not upgrade to 6.x without a dedicated task)
+Django==5.2.19
+
+# REST API
+djangorestframework==3.16.1
+
+# PostgreSQL driver (psycopg 3, prebuilt binary wheels)
+psycopg[binary]==3.3.9
+
+# Settings from environment variables / .env file
+django-environ==0.12.1
+
+# OpenAPI 3 schema generation
+drf-spectacular==0.29.0
