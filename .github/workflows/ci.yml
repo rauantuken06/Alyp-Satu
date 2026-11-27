@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (Django 5.2 + PostgreSQL 16)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: alyp_satu_test
+          POSTGRES_USER: alyp_satu
+          POSTGRES_PASSWORD: alyp_satu_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U alyp_satu -d alyp_satu_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://alyp_satu:alyp_satu_ci_password@localhost:5432/alyp_satu_test
+      DJANGO_SECRET_KEY: ci-insecure-test-key
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements-dev.txt
+
+      - name: Run Ruff lint check
+        run: ruff check backend
+
+      - name: Run Ruff format check
+        run: ruff format --check backend
+
+      - name: Run Django system checks
+        run: python backend/manage.py check
+
+      - name: Check for missing migrations
+        run: python backend/manage.py makemigrations --check --dry-run
+
+      - name: Apply database migrations
+        run: python backend/manage.py migrate --noinput
+
+      - name: Validate OpenAPI 3 schema
+        run: python backend/manage.py spectacular --validate --fail-on-warn
+
+      - name: Run pytest suite
+        run: pytest -v backend
+
+  frontend:
+    name: Frontend (React + TypeScript + Vite)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Vitest suite
+        run: npm run test
+
+      - name: Build production bundle
+        run: npm run build

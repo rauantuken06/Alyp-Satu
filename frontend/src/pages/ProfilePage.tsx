@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { updateCurrentUser } from "../api/auth";
@@ -26,15 +26,17 @@ export function ProfilePage() {
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState(user?.full_name ?? "");
+  const [syncedFullName, setSyncedFullName] = useState(user?.full_name ?? "");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  useEffect(() => {
-    setFullName(user?.full_name ?? "");
-  }, [user?.full_name]);
+  if (user && user.full_name !== syncedFullName) {
+    setSyncedFullName(user.full_name);
+    setFullName(user.full_name);
+  }
 
   if (!user) {
     return null;
