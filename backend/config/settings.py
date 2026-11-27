@@ -7,10 +7,15 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BASE_DIR.parent
 
+DEFAULT_CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
-    CSRF_TRUSTED_ORIGINS=(list, []),
+    CSRF_TRUSTED_ORIGINS=(list, DEFAULT_CSRF_TRUSTED_ORIGINS),
     SESSION_COOKIE_SECURE=(bool, False),
     CSRF_COOKIE_SECURE=(bool, False),
 )
@@ -25,7 +30,10 @@ SECRET_KEY = env(
 )
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=DEFAULT_CSRF_TRUSTED_ORIGINS,
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -119,6 +127,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=False)
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=False)
 

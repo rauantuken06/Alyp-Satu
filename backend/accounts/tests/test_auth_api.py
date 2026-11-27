@@ -336,3 +336,35 @@ def test_csrf_enforced_on_mutating_auth_endpoints() -> None:
         HTTP_X_CSRFTOKEN=rotated_csrf_token,
     )
     assert logout_response.status_code == 204
+
+
+@pytest.mark.django_db
+def test_register_succeeds_from_vite_dev_origin_with_csrf_token() -> None:
+    client = APIClient(enforce_csrf_checks=True)
+
+    csrf_response = client.get(
+        "/api/v1/auth/csrf/",
+        HTTP_HOST="localhost:8000",
+        HTTP_ORIGIN="http://localhost:5173",
+    )
+    assert csrf_response.status_code == 200
+    assert csrf_response.cookies["csrftoken"]["httponly"] == ""
+    csrf_token = csrf_response.cookies["csrftoken"].value
+
+    register_response = client.post(
+        "/api/v1/auth/register/",
+        data={
+            "email": "vite.user@example.com",
+            "password": "StrongPassword123!",
+            "full_name": "Vite Proxy User",
+        },
+        format="json",
+        HTTP_HOST="localhost:8000",
+        HTTP_ORIGIN="http://localhost:5173",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
+
+    assert register_response.status_code == 201
+    assert register_response.json()["email"] == "vite.user@example.com"
+    assert "sessionid" in register_response.cookies
+    assert register_response.cookies["sessionid"]["httponly"] is True
